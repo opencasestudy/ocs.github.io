@@ -1,0 +1,37 @@
+.panel-note
+{
+  -moz-border-radius: 6px;
+  -webkit-border-radius: 6px;
+  background-color: #f0f7fb;
+  #background-image: url(/assets/images/saw_blade_warning.png);
+  background-position: 5px 15px;
+  background-repeat: no-repeat;
+  border: solid 1px #3498db;
+  border-radius: 6px;
+  overflow: hidden;
+  padding: 5px 20px 5px 20px;
+  #min-height: 60px;
+}
+
+.panel-note.top-padding {
+  padding-top: 25px;
+}
+
+.panel-warning
+{
+  -moz-border-radius: 6px;
+  -webkit-border-radius: 6px;
+  background-color: rgb(252, 248, 227);
+  #background-image: url(/assets/images/icon-warning.png);
+  background-position: 5px 15px;
+  background-repeat: no-repeat;
+  border: solid 1px #3498db;
+  border-radius: 6px;
+  overflow: hidden;
+  padding: 5px 20px 5px 20px;
+  #min-height: 60px;
+}
+
+.panel-warning.top-padding {
+  padding-top: 25px;
+}
