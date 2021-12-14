@@ -14,7 +14,7 @@
   </head>
   <body>
     <div class="wrapper">
-      <header style="width:60px;">
+      <header>
         <h1><a href="{{ "/" | absolute_url }}">{{ site.title | default: site.github.repository_name }}</a></h1>
 
         {% if site.logo %}
@@ -39,12 +39,13 @@
         </ul>
         {% endif %}
       </header>
-      <section style="width:710px;">
+      <section>
 
       {{ content }}
 
       </section>
-      <footer style="width:60px;">
+      <footer>
+          {% include toc.html html=content %}
       </footer>
     </div>
     <script src="{{ "/assets/js/scale.fix.js" | relative_url }}"></script>

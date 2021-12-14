@@ -1,6 +1,6 @@
 ---
 layout: single
-title:  "klarnas payment issue in europe, 2021-10-2"
+title:  "klarna payment issue in europe, 2021-10-2"
 ---
 # klarnas payment issue in europe, 2021-10-2
 
