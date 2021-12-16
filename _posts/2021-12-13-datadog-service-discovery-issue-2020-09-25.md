@@ -10,7 +10,7 @@ title:  "service discovery issue of datadog in 2020-09-25"
 ## 案例回顾
 
 
-**Why did it happen?**
+### Why did it happen?
 
 In all regions, the Datadog platform is deployed across multiple availability zones and is routinely tested for resilience against the random loss of nodes in all availability zones. This incident was the result of a kind of failure that we had not experienced before.
 
@@ -19,7 +19,7 @@ datadog的服务，在公有云上，多 region 部署，每个 region 多 az �
 /过这次故障的原因，是 datadog 技术团队之前未曾遇到的。
 
 
-**The failure of a core system**
+### The failure of a core system
 
 The incident was caused by the failure of an internal service discovery and dynamic configuration system that the vast majority of Datadog software components rely on. Service discovery is a central directory of all services running at a given time and provides an easy way for services to find where their dependencies are. Dynamic configuration lets us reconfigure services at run-time and is one of the first dependencies that our services query, as they start up.
 
@@ -120,7 +120,7 @@ Back to our fateful day. When the smaller, latency-measuring cluster was recycle
 
 
 
-**The impact on the web tier**
+### The impact on the web tier
 
  
 The web tier, which terminates all interactive requests from our users, was visibly affected by the incident. It was intermittently available, with error rates in the 60-90% range throughout, as shown below. In practice pages often errored out, or dashboards successfully refreshed only 10% to 40% of the time.
@@ -131,7 +131,7 @@ web 服务，基本不能用，错误率90%，持续了近乎小半天。
 
 
 
- **Internal response and recovery**
+### Internal response and recovery
 
  
 A few minutes after the intake cluster started to show intermittent failures and roughly 20 minutes before we publicly declared an incident, teams triggered an internal one. It brought together on-call engineers for each of the affected services into a virtual war room and an incident commander to coordinate the overall response.
@@ -161,7 +161,7 @@ While the service discovery team was working to stabilize the cluster by cutting
 * 后端服务先于 web 服务恢复，web服务受影响数个小时；
 
 
-**External response**
+### External response
 
 
 Our external response followed our usual playbook: update the status page when the issue is systemic and post updates every 30 minutes until resolution. In hindsight we were not as effective as we should have been to communicate clearly and unequivocally the impact of the incident and the steps we were taking.
@@ -183,7 +183,7 @@ ETA 很重要，但是很难（行业痛点）；
 
 
 
-**How do we avoid it in the future?**
+### How do we avoid it in the future?
  
  Post-incident, all engineering teams have been involved in forensic investigations in order to understand in depth what happened and summarize all the findings in a copious collection of internal postmortems. Here is the gist of what we are prioritizing now to avoid this type of failure in the future, with work already underway and continuing into Q4 ’20 and beyond.
 
@@ -223,7 +223,7 @@ We had already started to remove that coupling in the following ways, and we wil
 故障注入测试，只能发现过往出现过的case，是一种回归测试。
 
 
-**Improve the resilience of service discovery**
+### Improve the resilience of service discovery
 The need to register and deregister services won’t go away but we must support it with a system that is not a single point of failure (be it distributed or not).
 
 
@@ -231,7 +231,7 @@ The need to register and deregister services won’t go away but we must support
 * 分布式并不等价于就是高可用。分布式本身就是一种工程实现，有他的工作前提。还是要有兜底措施。
 
 
-**Improve the resilience of the web tier**
+### Improve the resilience of the web tier
 
 Because the web tier sits in the middle of all queries made by our customers, it must be among the last systems to fail. This means reducing the number of hard dependencies to the absolute minimum with regular tests to make sure pages still load if soft dependencies fail downstream.
 
@@ -240,7 +240,7 @@ Because the web tier sits in the middle of all queries made by our customers, it
 * 不太懂。
 
 
-**Improve our external response**
+### Improve our external response
 
 It starts with having a dedicated role with clear processes to disseminate updates about high visibility incidents throughout. It also includes having clearer communication on the impact of an incident as it develops.
 
@@ -249,7 +249,7 @@ It starts with having a dedicated role with clear processes to disseminate updat
 需要有工具支撑。
 
 
-**Provide a clear playbook in case of regional failure**
+### Provide a clear playbook in case of regional failure
 
 Regardless of how much resilience we build into a Datadog instance running in a single region, there will remain a risk that the region becomes unavailable for one reason or another. We are committed to providing options for our customers to choose for contingency.
 
@@ -259,10 +259,9 @@ Regardless of how much resilience we build into a Datadog instance running in a 
 
 
 
-**In closing**
+### In closing
 
 This incident has been a frustrating experience for our customers and a humbling moment for all Datadog teams. We are keenly aware of our responsibility as your partner. You trust us and our platform to be your eyes and ears and we are sorry for not living up to it on that day. We are committed to learning from this experience, and to delivering meaningful improvements to our service and our communication.
-
 
 
 >
