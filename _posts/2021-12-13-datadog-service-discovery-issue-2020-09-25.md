@@ -235,9 +235,8 @@ The need to register and deregister services won’t go away but we must support
 
 Because the web tier sits in the middle of all queries made by our customers, it must be among the last systems to fail. This means reducing the number of hard dependencies to the absolute minimum with regular tests to make sure pages still load if soft dependencies fail downstream.
 
-
 >
-* 不太懂。
+* web层直接面向客户的，所以它的硬依赖应该尽量少，而软依赖当机也不应该影响web层的页面加载，后续通过持续测试来保证。
 
 
 ### Improve our external response
