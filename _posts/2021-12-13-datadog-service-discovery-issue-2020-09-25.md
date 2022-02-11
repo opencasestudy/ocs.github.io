@@ -2,7 +2,7 @@
 layout: default
 title:  "service discovery issue of datadog in 2020-09-25"
 ---
-# Datadog, service discovery issue in 2020-09-25
+# Datadog, service discovery overloaded issue in 2020-09-25
 
 ## 案例原始资料
 - [Datadog, 2020-09-25-infrastructure-connectivity-issue](https://www.datadoghq.com/blog/2020-09-25-infrastructure-connectivity-issue/)
@@ -10,13 +10,12 @@ title:  "service discovery issue of datadog in 2020-09-25"
 ## 案例回顾
 
 
-### Why did it happen?
+### Why did it happen
 
 In all regions, the Datadog platform is deployed across multiple availability zones and is routinely tested for resilience against the random loss of nodes in all availability zones. This incident was the result of a kind of failure that we had not experienced before.
 
->
-datadog的服务，在公有云上，多 region 部署，每个 region 多 az 部署。针对多 az，都会有定期的故障注入测试，比如随机关闭一定量的主机 nodes 来测试整体服务的健壮性。
-/过这次故障的原因，是 datadog 技术团队之前未曾遇到的。
+>datadog的服务，在公有云上，多 region 部署，每个 region 多 az 部署。针对多 az，都会有定期的故障注入测试，比如随机关闭一定量的主机 nodes 来测试整体服务的健壮性。
+不过这次故障的原因，是 datadog 技术团队之前未曾遇到的。
 
 
 ### The failure of a core system
@@ -24,8 +23,7 @@ datadog的服务，在公有云上，多 region 部署，每个 region 多 az �
 The incident was caused by the failure of an internal service discovery and dynamic configuration system that the vast majority of Datadog software components rely on. Service discovery is a central directory of all services running at a given time and provides an easy way for services to find where their dependencies are. Dynamic configuration lets us reconfigure services at run-time and is one of the first dependencies that our services query, as they start up.
 
 
->
-此次故障，由于 datadog 内部的服务发现系统和动态配置管理系统的故障引发。
+>此次故障，由于 datadog 内部的服务发现系统和动态配置管理系统的故障引发。
 
 
 This system is backed by a highly available, distributed cluster spanning multiple availability zones. It is designed to withstand the loss of one or two of its nodes at any given time without an impact on its ability to:
@@ -44,8 +42,7 @@ This system is backed by a highly available, distributed cluster spanning multip
 Because service discovery is a core system throughout our entire infrastructure, its failure unfortunately had global effects, made our recovery efforts difficult, and extended the duration of the incident.
 
 
->
-因为服务发现系统，是所有服务都依赖的，所以影响面大，恢复的过程也比较复杂和耗时。
+>因为服务发现系统，是所有服务都依赖的，所以影响面大，恢复的过程也比较复杂和耗时。
 
 
 We traced the origin of the failure to a routine operation by an authorized engineer early that day, on a small-sized cluster, that is itself a dependency of a much larger data intake cluster. The function of this smaller cluster is to measure latency once data has been received by the intake cluster. When a payload is received, the intake cluster asynchronously instructs the latency-measuring one to start and track latency as the payload traverses our processing pipelines.
@@ -53,26 +50,24 @@ We traced the origin of the failure to a routine operation by an authorized engi
 
 >
 * **针对这个故障，应急处理团队首先是去回溯最近的变更事件（注意，这个变更事件是被授权过的）。**
-* small-sized cluster，运行着一个latency-measuring的服务，类似于一个『哨兵』机制，和数据接收集群(data intake cluster)有交互，当数据接收集群收到监控数据之后，会异步的通知这个小集群，用于测量数据上报的latency等数据处理过程中的指标。
+* `small-sized cluster`，运行着一个 `latency-measuring` 的服务，和数据接收集群(data intake cluster)有交互，当数据接收集群收到监控数据之后，会异步的通知这个`latency-measuring`，用于测量数据上报的latency等数据处理过程中的指标。
 
 
 We designed this interaction to not be in the critical path of incoming data. If the latency-measuring service is down or missing, we get internal notifications to investigate, but the sole customer-facing effect of that failure is to suppress alert notifications downstream. Or so it was until roughly a month before the incident.
 
 
->
-**原本在设计上，这个  latency-measuring  并不在数据处理的关键路径上**，如果 latency-measuring 不可用，不会影响到面向终端客户的核心功能。
+>**原本在设计上，这个 `latency-measuring` 并不在数据处理的关键路径上**，如果 latency-measuring 不可用，不会影响到面向终端客户的核心功能。
 
 
 Late August, as part of a migration of that large intake cluster, we applied a set of changes to its configuration, including a faulty one: instead of using a local file for DNS resolution (slow to update reliably but very resilient to failure), the intake cluster started to depend on the local DNS resolver, which itself is a caching proxy to the service discovery system. Once the faulty change was live, there was no visible difference:
 
 
 >
-* 故障发生的一个月前，针对 `large intake cluster` 的迁移操作中，引入了一个错误的配置变更：将 `large intake cluster` 的DNS 解析方式，从原来的使用本地文件的方式，切换为依赖于 `Local DNS Resolver` 来解析（注意，依赖本地文件做dns解析，健壮性更强，虽然变更起来比较繁琐）；
+* 故障发生的一个月前，针对 `large intake cluster` 的迁移操作中，引入了一个错误的配置变更：将 `large intake cluster` 的 DNS 解析方式，从原来的使用本地文件的方式，切换为依赖于 `Local DNS Resolver` 来解析（注意，依赖本地文件做dns解析，健壮性更强，虽然变更起来比较繁琐）；
 * 注意：DNS 服务的背后，是服务发现系统 `service discovery system`（也可以说，DNS服务是服务发现系统的一个 caching proxy）；
 
 
 1. The local DNS resolver did answer more queries but it did not change any intake service level indicator that otherwise would have had us trigger an immediate investigation.
-
 2. The local DNS resolver properly cached DNS queries so very few additional DNS queries were received upstream by the service discovery cluster.
 
 
@@ -87,8 +82,8 @@ However, there was one crucial exception which we never see during normal operat
 With this change in place and its impact missed during the change review, the conditions were set for an unforeseen failure starting with a routine operation a month later.
 
 >
-* 但是上次的变更，引入了一个未考虑到的非预期的关键变化：对于 `NXDOMAIN` 的解析，`local dns resolver` 并不会缓存，而是会直接透传给后端的服务发现系统`service discovery cluster`；
-* 对应到此次故障中，一个未在`local DNS resolver`中配置解析的entry，会导致 client 几乎同时，快速的直接向后端的`service discovery cluster` 发起大量的查询；
+* 但是上次的变更，引入了一个未考虑到的非预期的关键变化：对于一个域名的解析，当返回是 `NXDOMAIN` 时 ，`local dns resolver` 并不会缓存该解析请求，而是会直接透传给后端的服务发现系统`service discovery cluster`；
+* 对应到此次故障中，对一个未在 DNS 中配置解析的域名的访问，会导致 `large intake cluster` 这个大集群中的所有的主机， 几乎同时、快速的直接向后端的 `service discovery cluster` 发起大量的查询；
 * **那这个关于`latency-measuring`服务解析缺失的原因是什么？看下面的分析，这个隐患在一个月前已经埋下了**;
 
 
@@ -98,15 +93,14 @@ Back to our fateful day. When the smaller, latency-measuring cluster was recycle
 
 ![](/assets/images/posts/post-img-1.png)
 
->
+>在引发故障的这一天，`latency-measuring`服务进行了缩容操作（scale down），这个操作导致了
 服务发现系统被百倍的流量打穿了，打挂了。 //限流哪里去了？
 
 
- This sudden onslaught caused the service discovery cluster to lose its quorum and fail to reliably register and deregister services, and fail to quickly answer DNS requests coming from other parts of our infrastructure. After local DNS caches expired on all nodes, we faced a “thundering herd” on the service discovery cluster, amplifying the issue until its breaking point. The net result was that most of our services could neither reliably find their dependencies nor load their runtime configuration at startup time, thus causing repeated errors until:
+This sudden onslaught caused the service discovery cluster to lose its quorum and fail to reliably register and deregister services, and fail to quickly answer DNS requests coming from other parts of our infrastructure. After local DNS caches expired on all nodes, we faced a “thundering herd” on the service discovery cluster, amplifying the issue until its breaking point. The net result was that most of our services could neither reliably find their dependencies nor load their runtime configuration at startup time, thus causing repeated errors until:
 
 
->
-最惨的时刻，在大部分主机上的 DNS cache expired的时刻。服务发现系统彻底不能用了。
+>最惨的时刻，在大部分主机上的 DNS cache expired的时刻。服务发现系统彻底不能用了。
 
 
 1. Their dependencies were statically available via a local file,
@@ -178,18 +172,16 @@ In prior incidents we were able to get a sense of an ETA relatively quickly beca
 In this case, with so many services impacted, we scaled our internal response accordingly but did not do the same with our external response and our communication. We focused too much on the public status page and did not have a dedicated role in incident response to make sure our customers received timely updates if they were not watching our status page.
 
 
->
-ETA 很重要，但是很难（行业痛点）；
+>ETA 很重要，但是很难（行业痛点）；
 
 
 
 ### How do we avoid it in the future?
  
- Post-incident, all engineering teams have been involved in forensic investigations in order to understand in depth what happened and summarize all the findings in a copious collection of internal postmortems. Here is the gist of what we are prioritizing now to avoid this type of failure in the future, with work already underway and continuing into Q4 ’20 and beyond.
+Post-incident, all engineering teams have been involved in forensic investigations in order to understand in depth what happened and summarize all the findings in a copious collection of internal postmortems. Here is the gist of what we are prioritizing now to avoid this type of failure in the future, with work already underway and continuing into Q4 ’20 and beyond.
 
 
->
-改进项，持续一个Q
+>改进项，持续一个Q
 
 
 1. Further decouple the control plane and the data plane
@@ -209,34 +201,30 @@ We had already started to remove that coupling in the following ways, and we wil
 
 
 
- ‒ We are hardening all components to make them resilient to a prolonged loss of service discovery and dynamic configuration. When they are unavailable, services that process incoming data or answer interactive queries should fail “closed” and continue to work without degradation.
+We are hardening all components to make them resilient to a prolonged loss of service discovery and dynamic configuration. When they are unavailable, services that process incoming data or answer interactive queries should fail “closed” and continue to work without degradation.
 
 
->
-* 这是一个关键改进，特别是针对服务发现或者连接配置等信息，如果中心服务端检索不到，那么请用本地的缓存。
+>这是一个关键改进，特别是针对服务发现或者连接配置等信息，如果中心服务端检索不到，那么请用本地的缓存。
 
 
- ‒ We will regularly test the types of failures we experienced.
+We will regularly test the types of failures we experienced.
 
 
->
-故障注入测试，只能发现过往出现过的case，是一种回归测试。
+>故障注入测试，只能发现过往出现过的case，是一种回归测试。
 
 
 ### Improve the resilience of service discovery
 The need to register and deregister services won’t go away but we must support it with a system that is not a single point of failure (be it distributed or not).
 
 
->
-* 分布式并不等价于就是高可用。分布式本身就是一种工程实现，有他的工作前提。还是要有兜底措施。
+>分布式并不等价于就是高可用。分布式本身就是一种工程实现，有他的工作前提。还是要有兜底措施。
 
 
 ### Improve the resilience of the web tier
 
 Because the web tier sits in the middle of all queries made by our customers, it must be among the last systems to fail. This means reducing the number of hard dependencies to the absolute minimum with regular tests to make sure pages still load if soft dependencies fail downstream.
 
->
-* web层直接面向客户的，所以它的硬依赖应该尽量少，而软依赖当机也不应该影响web层的页面加载，后续通过持续测试来保证。
+> web层直接面向客户的，所以它的硬依赖应该尽量少，而软依赖当机也不应该影响web层的页面加载，后续通过持续测试来保证。
 
 
 ### Improve our external response
@@ -244,8 +232,7 @@ Because the web tier sits in the middle of all queries made by our customers, it
 It starts with having a dedicated role with clear processes to disseminate updates about high visibility incidents throughout. It also includes having clearer communication on the impact of an incident as it develops.
 
 
->
-需要有工具支撑。
+>需要有工具支撑。
 
 
 ### Provide a clear playbook in case of regional failure
@@ -253,8 +240,7 @@ It starts with having a dedicated role with clear processes to disseminate updat
 Regardless of how much resilience we build into a Datadog instance running in a single region, there will remain a risk that the region becomes unavailable for one reason or another. We are committed to providing options for our customers to choose for contingency.
 
 
->
-针对region级别的故障，针对dd来说，其实可选方案不多。因为dd的数据就是按照region 分区的。
+>针对region级别的故障，针对dd来说，其实可选方案不多。因为dd的数据就是按照region 分区的。
 
 
 
@@ -263,15 +249,23 @@ Regardless of how much resilience we build into a Datadog instance running in a 
 This incident has been a frustrating experience for our customers and a humbling moment for all Datadog teams. We are keenly aware of our responsibility as your partner. You trust us and our platform to be your eyes and ears and we are sorry for not living up to it on that day. We are committed to learning from this experience, and to delivering meaningful improvements to our service and our communication.
 
 
->
-不出故障是不可能的，做好兜底。
+>不出故障是不可能的，做好兜底。
 
-## top3的建议
+## 给 datadog 的建议
+针对核心单点隐患的降级预案不够完备。
 
-## top3的借鉴
+这个问题看起来是注定要发生，不可避免，甚至于一定程度上，属于灾难恢复的级别了（因为所有的服务与服务之间的连接信息，在服务发现系统故障期间，都丢失了）
 
-## 给datadog推荐解决方案
+所有服务的依赖关系和连接信息都依赖服务发现系统，运维工具也依赖服务发现系统，所以故障期间工具基本无法使用，使得处理过程耗时更多。要提前考虑针对这些核心单点的降级预案，在故障时，可以从强依赖，降级为弱依赖运行。
 
-## OCS 点评
+## 从 datadog 的借鉴
+- datadog 的服务本身多region、多az部署，并且有常态化的故障注入测试（比如主动杀掉线上部分节点）。
+- 线上的发布变更，有相对完善的审批和授权流程。
+- 有相对完善的对外公众沟通机制。技术团队内部有成型的故障应急处理作战室（ virtual war room ）和指挥官（incident commander）
+
 
 ## 数据统计
+- 发现&启动应急：几分钟  
+- 启动公众沟通 : 20多分钟  
+- 调查和止损 ：10小时 
+
